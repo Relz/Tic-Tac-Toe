@@ -1,3 +1,2 @@
-# Unity
- Лабораторные работы по Unity (IDEs: Unity, Visual Studio Code) 
- 
+# Крестики-нолики
+ Лабораторная работа по Unity: Крестики-нолики (IDEs: Unity, Visual Studio Code) 

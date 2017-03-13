@@ -49,9 +49,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\script\Manager.cs" />
+     <Compile Include="Assets\script\Constant.cs" />
+     <Compile Include="Assets\script\GameController.cs" />
      <Compile Include="Assets\script\PlayerChooseRole.cs" />
-     <Compile Include="Assets\script\Restart.cs" />
+     <Compile Include="Assets\script\StatusText.cs" />
  <Reference Include="UnityEngine.UI">
  <HintPath>/opt/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
  </Reference>

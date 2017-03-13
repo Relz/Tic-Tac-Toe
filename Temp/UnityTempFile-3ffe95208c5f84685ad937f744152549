@@ -78,9 +78,10 @@
 -define:UNITY_EDITOR_64
 -define:UNITY_EDITOR_LINUX
 -define:UNITY_TEAM_LICENSE
-Assets/script/Manager.cs
+Assets/script/Constant.cs
+Assets/script/GameController.cs
 Assets/script/PlayerChooseRole.cs
-Assets/script/Restart.cs
+Assets/script/StatusText.cs
 -r:/opt/Unity/Editor/Data/MonoBleedingEdge/lib/mono/unity/System.Runtime.Serialization.dll
 -r:/opt/Unity/Editor/Data/MonoBleedingEdge/lib/mono/unity/System.Xml.Linq.dll
 -r:/opt/Unity/Editor/Data/MonoBleedingEdge/lib/mono/unity/UnityScript.dll

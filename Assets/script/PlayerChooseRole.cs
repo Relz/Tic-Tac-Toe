@@ -1,50 +1,68 @@
 ﻿using UnityEngine;
 using UnityEngine.UI; 
 
+public enum PlayerRole
+{
+	None,
+	Cross,
+	Circle
+}
+
 public class PlayerChooseRole : MonoBehaviour 
 {
-	public Button btnChooseCross;
-	public Button btnChooseCircle;
-	// Use this for initialization
+	public Button btnChooseCrossObj;
+	public Button btnChooseCircleObj;
+	private static Button btnChooseCross;
+	private static Button btnChooseCircle;
+
+	private static PlayerRole m_playerChoice = PlayerRole.None;
+	
 	void Start () 
 	{
-		ChooseCross();
-	}
-	
-	// Update is called once per frame
-	void Update () 
-	{
+		btnChooseCross = btnChooseCrossObj.GetComponent<Button>();
+		btnChooseCircle = btnChooseCircleObj.GetComponent<Button>();
 	}
 
-	public void OnBtnChooseCrossClick () 
+	public static void Init()
 	{
-		DisableChooseRoleButtons();
+		SetEnableChooseRoleButtons(true);
 		ChooseCross();
 	}
 	
 	public void OnBtnChooseCircleClick () 
 	{
-		DisableChooseRoleButtons();
+		SetEnableChooseRoleButtons(false);
 		ChooseCircle();
 	}
 
-	public void ChooseCross () 
+	public static void ChooseCross () 
 	{
-		Manager.firstPlayerRole = PlayerRole.Cross;
-		Debug.Log("Cross");
+		m_playerChoice = PlayerRole.Cross;
+		Shadow btnChooseCrossShadow = btnChooseCross.GetComponent<Shadow>();
+		btnChooseCrossShadow.enabled = true;
+		Shadow btnChooseCircleShadow = btnChooseCircle.GetComponent<Shadow>();
+		btnChooseCircleShadow.enabled = false;
 	}
 	
-	public void ChooseCircle () 
+	public static void ChooseCircle () 
 	{
-		Manager.firstPlayerRole = PlayerRole.Circle;
-		Debug.Log("Circle");
+		m_playerChoice = PlayerRole.Circle;
+		Shadow btnChooseCircleShadow = btnChooseCircle.GetComponent<Shadow>();
+		btnChooseCircleShadow.enabled = true;
+		Shadow btnChooseCrossShadow = btnChooseCross.GetComponent<Shadow>();
+		btnChooseCrossShadow.enabled = false;
 	}
 
-	private void DisableChooseRoleButtons()
+	private static void SetEnableChooseRoleButtons(bool value)
 	{
-		btnChooseCross.interactable = false;
-		btnChooseCross.enabled = false;
-		btnChooseCircle.interactable = false;
-		btnChooseCircle.enabled = false;
+		btnChooseCross.interactable = value;
+		btnChooseCross.enabled = value;
+		btnChooseCircle.interactable = value;
+		btnChooseCircle.enabled = value;
+	}
+
+	public static PlayerRole GetChoice()
+	{
+		return m_playerChoice;
 	}
 }

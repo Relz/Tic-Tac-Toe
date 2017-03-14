@@ -62,8 +62,11 @@ public class Field : MonoBehaviour
 		{
 			for (uint j = 0; j < 3; ++j)
 			{
-				cellsImage[i, j].color = new Color(0, 0, 0, 0);
-				cells[i, j] = FieldItems.Empty;
+				if (cellsImage[i, j])
+				{
+					cellsImage[i, j].color = new Color(0, 0, 0, 0);
+					cells[i, j] = FieldItems.Empty;
+				}
 			}
 		}
 	}
@@ -76,7 +79,7 @@ public class Field : MonoBehaviour
 		}
 		Position cellPos = new Position(cellPosStr.Split(':'));
 		cellsImage[cellPos.y, cellPos.x].color = new Color(0, 0, 0, 255);
-		if (GameController.m_player0.GetRole() == PlayerRole.Cross)
+		if (GameController.GetCurrentPlayer().GetRole() == PlayerRole.Cross)
 		{
 			cellsImage[cellPos.y, cellPos.x].sprite = crossSprite;
 			cells[cellPos.y, cellPos.x] = FieldItems.Cross;
@@ -86,5 +89,6 @@ public class Field : MonoBehaviour
 			cellsImage[cellPos.y, cellPos.x].sprite = roundSprite;
 			cells[cellPos.y, cellPos.x] = FieldItems.Round;
 		}
+		GameController.NextTurn();
 	}
 }

@@ -5,34 +5,34 @@ public enum PlayerRole
 {
 	None,
 	Cross,
-	Circle
+	Round
 }
 
 public class PlayerChooseRole : MonoBehaviour 
 {
 	public Button btnChooseCrossObj;
-	public Button btnChooseCircleObj;
+	public Button btnChooseRoundObj;
 	private static Button btnChooseCross;
-	private static Button btnChooseCircle;
+	private static Button btnChooseRound;
 
 	private static PlayerRole m_playerChoice = PlayerRole.None;
 	
 	void Start () 
 	{
 		btnChooseCross = btnChooseCrossObj.GetComponent<Button>();
-		btnChooseCircle = btnChooseCircleObj.GetComponent<Button>();
+		btnChooseRound = btnChooseRoundObj.GetComponent<Button>();
 	}
 
 	public static void Init()
 	{
-		SetEnableChooseRoleButtons(true);
 		ChooseCross();
+		SetEnableChooseRoleButtons(true);
 	}
 	
-	public void OnBtnChooseCircleClick () 
+	public void OnBtnChooseRoundClick () 
 	{
-		SetEnableChooseRoleButtons(false);
-		ChooseCircle();
+		ChooseRound();
+		GameController.StartGame();
 	}
 
 	public static void ChooseCross () 
@@ -40,29 +40,34 @@ public class PlayerChooseRole : MonoBehaviour
 		m_playerChoice = PlayerRole.Cross;
 		Shadow btnChooseCrossShadow = btnChooseCross.GetComponent<Shadow>();
 		btnChooseCrossShadow.enabled = true;
-		Shadow btnChooseCircleShadow = btnChooseCircle.GetComponent<Shadow>();
-		btnChooseCircleShadow.enabled = false;
+		Shadow btnChooseRoundShadow = btnChooseRound.GetComponent<Shadow>();
+		btnChooseRoundShadow.enabled = false;
 	}
 	
-	public static void ChooseCircle () 
+	public static void ChooseRound () 
 	{
-		m_playerChoice = PlayerRole.Circle;
-		Shadow btnChooseCircleShadow = btnChooseCircle.GetComponent<Shadow>();
-		btnChooseCircleShadow.enabled = true;
+		m_playerChoice = PlayerRole.Round;
+		Shadow btnChooseRoundShadow = btnChooseRound.GetComponent<Shadow>();
+		btnChooseRoundShadow.enabled = true;
 		Shadow btnChooseCrossShadow = btnChooseCross.GetComponent<Shadow>();
 		btnChooseCrossShadow.enabled = false;
 	}
 
-	private static void SetEnableChooseRoleButtons(bool value)
+	public static void SetEnableChooseRoleButtons(bool value)
 	{
 		btnChooseCross.interactable = value;
 		btnChooseCross.enabled = value;
-		btnChooseCircle.interactable = value;
-		btnChooseCircle.enabled = value;
+		btnChooseRound.interactable = value;
+		btnChooseRound.enabled = value;
 	}
 
 	public static PlayerRole GetChoice()
 	{
 		return m_playerChoice;
+	}
+
+	public static PlayerRole GetAnotherChoice()
+	{
+		return (m_playerChoice == PlayerRole.Cross) ? PlayerRole.Round : PlayerRole.Cross;
 	}
 }

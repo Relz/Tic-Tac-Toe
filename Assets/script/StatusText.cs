@@ -1,8 +1,8 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-public class StatusText : MonoBehaviour {
-
+public class StatusText : MonoBehaviour 
+{
 	public Text statusTextObj;
 	private static Text statusText;
 	

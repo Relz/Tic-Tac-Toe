@@ -1,11 +1,9 @@
-﻿using UnityEngine;
-
-public class Constant : MonoBehaviour {
-
+﻿public class Constant 
+{
 	public class STATUS_TEXT
 	{
-		public const string waitForChoice = "Начните игру или выберите игрока";
-		public const string CircleTurn = "ходит O";
-		public const string CrossTurn = "ходит X";
+		public const string WAIT_FOR_CHOICE = "Начните игру или выберите игрока";
+		public const string ROUND_TURN = "ходит O";
+		public const string CROSS_TURN = "ходит X";
 	}
 }

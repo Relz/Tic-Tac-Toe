@@ -14,6 +14,8 @@ public class PlayerChooseRole : MonoBehaviour
 	public Button btnChooseRoundObj;
 	private static Button btnChooseCross;
 	private static Button btnChooseRound;
+	private static Text crossScore;
+	private static Text roundScore;
 
 	private static PlayerRole m_playerChoice = PlayerRole.None;
 	
@@ -21,12 +23,28 @@ public class PlayerChooseRole : MonoBehaviour
 	{
 		btnChooseCross = btnChooseCrossObj.GetComponent<Button>();
 		btnChooseRound = btnChooseRoundObj.GetComponent<Button>();
+		foreach (Text text in btnChooseCrossObj.transform.GetComponentsInChildren<Text>())
+		{
+			if (text.gameObject.name == "Score")
+			{
+				crossScore = text;
+			}
+		}
+		foreach (Text text in btnChooseRoundObj.transform.GetComponentsInChildren<Text>())
+		{
+			if (text.gameObject.name == "Score")
+			{
+				roundScore = text;
+			}
+		}
 	}
 
 	public static void Init()
 	{
 		ChooseCross();
 		SetEnableChooseRoleButtons(true);
+		SetScore(PlayerRole.Cross, 0);
+		SetScore(PlayerRole.Round, 0);
 	}
 	
 	public void OnBtnChooseRoundClick () 
@@ -69,5 +87,17 @@ public class PlayerChooseRole : MonoBehaviour
 	public static PlayerRole GetAnotherChoice()
 	{
 		return (m_playerChoice == PlayerRole.Cross) ? PlayerRole.Round : PlayerRole.Cross;
+	}
+
+	public static void SetScore(PlayerRole role, uint value)
+	{
+		if (role == PlayerRole.Cross)
+		{
+			crossScore.text = (value != 0) ? value.ToString() : "-";
+		}
+		else if (role == PlayerRole.Round)
+		{
+			roundScore.text = (value != 0) ? value.ToString() : "-";
+		}
 	}
 }

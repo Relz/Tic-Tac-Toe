@@ -18,6 +18,8 @@ public class GameController : MonoBehaviour
 		StatusText.SetText(Constant.STATUS_TEXT.WAIT_FOR_CHOICE);
 		PlayerChooseRole.Init();
 		Field.Init();
+		m_player0.ClearScore();
+		m_player1.ClearScore();
 	}
 
 	public static void StartGame()

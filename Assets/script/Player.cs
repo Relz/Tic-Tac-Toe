@@ -4,6 +4,8 @@ public class Player
 {
 	private PlayerRole m_role;
 	private bool m_isAI;
+	private uint m_score = 0;
+
 	public Player() 
 	{
 		m_role = PlayerRole.None;
@@ -33,5 +35,21 @@ public class Player
 	public void DoTurn()
 	{
 		Debug.Log("I can't do that yet");
+	}
+
+	public void IncreaseScore()
+	{
+		++m_score;
+		PlayerChooseRole.SetScore(GetRole(), GetScore());
+	}
+
+	public uint GetScore()
+	{
+		return m_score;
+	}
+
+	public void ClearScore()
+	{
+		m_score = 0;
 	}
 }

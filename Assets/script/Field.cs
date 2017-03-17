@@ -2,7 +2,7 @@
 using UnityEngine.UI;
 using System;
 
-enum FieldItem
+public enum FieldItem
 {
 	Empty,
 	Cross,
@@ -14,36 +14,48 @@ public class Field : MonoBehaviour
 	public GameObject cell0, cell1, cell2, cell3, cell4, cell5, cell6, cell7, cell8;
 	public GameObject line;
 
-	private static Image[,] cellsImage = new Image[3, 3];
-	private static FieldItem[,] cells = new FieldItem[3, 3];
+	private static Image[,] m_cellsImage = new Image[3, 3];
+	private static Image[,] m_cellsBackground = new Image[3, 3];
+	private static FieldItem[,] m_cells = new FieldItem[3, 3];
 
-	private static Sprite crossSprite;
-	private static Sprite roundSprite;
+	private static Sprite m_crossSprite;
+	private static Sprite m_roundSprite;
 
-	private static RectTransform lineRectTransform;
-	private static Image lineImage;
+	private static RectTransform m_lineRectTransform;
+	private static Image m_lineImage;
+	private static Vector2 m_lastTurn;
 
 	void Start () 
 	{
-		cellsImage[0, 0] = cell0.GetComponentInChildren<Image>();
-		cellsImage[0, 1] = cell1.GetComponentInChildren<Image>();
-		cellsImage[0, 2] = cell2.GetComponentInChildren<Image>();
-		cellsImage[1, 0] = cell3.GetComponentInChildren<Image>();
-		cellsImage[1, 1] = cell4.GetComponentInChildren<Image>();
-		cellsImage[1, 2] = cell5.GetComponentInChildren<Image>();
-		cellsImage[2, 0] = cell6.GetComponentInChildren<Image>();
-		cellsImage[2, 1] = cell7.GetComponentInChildren<Image>();
-		cellsImage[2, 2] = cell8.GetComponentInChildren<Image>();
-		crossSprite = Resources.Load<Sprite>("cross");
-		roundSprite = Resources.Load<Sprite>("round");
-		lineRectTransform = line.GetComponent<RectTransform>();
-		lineImage = line.GetComponent<Image>();
+		m_cellsImage[0, 0] = cell0.GetComponentInChildren<Image>();
+		m_cellsImage[0, 1] = cell1.GetComponentInChildren<Image>();
+		m_cellsImage[0, 2] = cell2.GetComponentInChildren<Image>();
+		m_cellsImage[1, 0] = cell3.GetComponentInChildren<Image>();
+		m_cellsImage[1, 1] = cell4.GetComponentInChildren<Image>();
+		m_cellsImage[1, 2] = cell5.GetComponentInChildren<Image>();
+		m_cellsImage[2, 0] = cell6.GetComponentInChildren<Image>();
+		m_cellsImage[2, 1] = cell7.GetComponentInChildren<Image>();
+		m_cellsImage[2, 2] = cell8.GetComponentInChildren<Image>();
+		m_cellsBackground[0, 0] = cell0.transform.GetChild(1).GetComponent<Image>();
+		m_cellsBackground[0, 1] = cell1.transform.GetChild(1).GetComponent<Image>();
+		m_cellsBackground[0, 2] = cell2.transform.GetChild(1).GetComponent<Image>();
+		m_cellsBackground[1, 0] = cell3.transform.GetChild(1).GetComponent<Image>();
+		m_cellsBackground[1, 1] = cell4.transform.GetChild(1).GetComponent<Image>();
+		m_cellsBackground[1, 2] = cell5.transform.GetChild(1).GetComponent<Image>();
+		m_cellsBackground[2, 0] = cell6.transform.GetChild(1).GetComponent<Image>();
+		m_cellsBackground[2, 1] = cell7.transform.GetChild(1).GetComponent<Image>();
+		m_cellsBackground[2, 2] = cell8.transform.GetChild(1).GetComponent<Image>();
+		m_crossSprite = Resources.Load<Sprite>("cross");
+		m_roundSprite = Resources.Load<Sprite>("round");
+		m_lineRectTransform = line.GetComponent<RectTransform>();
+		m_lineImage = line.GetComponent<Image>();
 	}
 
 	public static void Init()
 	{
+		m_lastTurn = new Vector2(-1, -1);
 		Clear();
-		if (lineImage)
+		if (m_lineImage)
 		{
 			DrawLine(FieldItem.Empty, 0, 507, 0, -507, 0);
 		}
@@ -51,48 +63,88 @@ public class Field : MonoBehaviour
 
 	private static void Clear()
 	{
-		for (uint i = 0; i < 3; ++i)
+		for (uint i = 0; i < Constant.FIELD_SIZE; ++i)
 		{
-			for (uint j = 0; j < 3; ++j)
+			for (uint j = 0; j < Constant.FIELD_SIZE; ++j)
 			{
-				if (cellsImage[i, j])
+				if (m_cellsImage[i, j])
 				{
-					cellsImage[i, j].color = new Color(255, 255, 255, 0);
-					cells[i, j] = FieldItem.Empty;
+					m_cellsImage[i, j].color = new Color(1, 1, 1, 0);
+					m_cells[i, j] = FieldItem.Empty;
 				}
 			}
 		}
 	}
 	
+	public static void CellClickImpl(int x, int y)
+	{
+		if (!IsCellFree(x, y))
+		{
+			return;
+		}
+		Vector3 cellPos = new Vector2();
+		cellPos.x = x;
+		cellPos.y = y;
+		m_cellsImage[(uint)cellPos.y, (uint)cellPos.x].color = new Color(1, 1, 1, 1);
+		ClearMarks();
+		if (GameController.GetCurrentPlayer().GetRole() == PlayerRole.Cross)
+		{
+			m_cellsImage[(uint)cellPos.y, (uint)cellPos.x].sprite = m_crossSprite;
+			m_cells[(uint)cellPos.y, (uint)cellPos.x] = FieldItem.Cross;
+		}
+		else
+		{
+			m_cellsImage[(uint)cellPos.y, (uint)cellPos.x].sprite = m_roundSprite;
+			m_cells[(uint)cellPos.y, (uint)cellPos.x] = FieldItem.Round;
+		}
+		m_lastTurn.x = cellPos.x;
+		m_lastTurn.y = cellPos.y;
+		if (TryToWin((uint)cellPos.x, (uint)cellPos.y))
+		{
+			GameController.Victory();
+		}
+		else if (IsFieldFull())
+		{
+			GameController.Draft();
+		}
+		else
+		{
+			GameController.NextTurn();
+		}
+	}
+
+	private static void ClearMarks()
+	{
+		for (uint i = 0; i < Constant.FIELD_SIZE; ++i)
+		{
+			for (uint j = 0; j < Constant.FIELD_SIZE; ++j)
+			{
+				m_cellsBackground[i, j].color = new Color(1, 1, 1, 0);
+			}
+		}
+	}
+
 	public void OnCellClick(string cellPosStr)
 	{
+		if (GameController.IsGameOver())
+		{
+			return;
+		}
 		if (!GameController.IsGameStarted())
 		{
 			GameController.StartGame();
 		}
+		if (GameController.GetCurrentPlayer().IsAI())
+		{
+			return;
+		}
 		string[] cellPosArr = cellPosStr.Split(':');
-		Vector3 cellPos = new Vector3();
-		cellPos.x = Convert.ToUInt32(cellPosArr[0], 10);
-		cellPos.y = Convert.ToUInt32(cellPosArr[1], 10);
-		cellsImage[(uint)cellPos.y, (uint)cellPos.x].color = new Color(255, 255, 255, 255);
-		if (GameController.GetCurrentPlayer().GetRole() == PlayerRole.Cross)
-		{
-			cellsImage[(uint)cellPos.y, (uint)cellPos.x].sprite = crossSprite;
-			cells[(uint)cellPos.y, (uint)cellPos.x] = FieldItem.Cross;
-		}
-		else
-		{
-			cellsImage[(uint)cellPos.y, (uint)cellPos.x].sprite = roundSprite;
-			cells[(uint)cellPos.y, (uint)cellPos.x] = FieldItem.Round;
-		}
-		if (TryToWin((uint)cellPos.x, (uint)cellPos.y))
-		{
-			GameController.GetCurrentPlayer().IncreaseScore();
-		}
-		GameController.NextTurn();
+		int x = Convert.ToInt32(cellPosArr[0], 10);
+		int y = Convert.ToInt32(cellPosArr[1], 10);
+		CellClickImpl(x, y);
 	}
 
-	private bool TryToWin(uint x, uint y)
+	private static bool TryToWin(uint x, uint y)
 	{
 		Vector3 startCellPos = new Vector3(x, y);
 		Vector3 endCellPos = new Vector3(x, y);
@@ -103,8 +155,7 @@ public class Field : MonoBehaviour
 			TryToWinCheckRightDiagonal(x, y, ref startCellPos, ref endCellPos)
 		)
 		{
-			Image cellImage = cellsImage[(uint)startCellPos.y, (uint)startCellPos.x];
-			FieldItem fieldItem = cells[(uint)startCellPos.y, (uint)startCellPos.x];
+			FieldItem fieldItem = m_cells[(uint)startCellPos.y, (uint)startCellPos.x];
 			if (startCellPos.x == endCellPos.x)
 			{
 				// Вертикаль
@@ -162,25 +213,25 @@ public class Field : MonoBehaviour
 		return false;
 	}
 
-	private bool TryToWinCheckVertical(uint x, uint y, ref Vector3 startPos, ref Vector3 endPos)
+	private static bool TryToWinCheckVertical(uint x, uint y, ref Vector3 startPos, ref Vector3 endPos)
 	{
 		uint lineLength = 1;
-		FieldItem fieldItem = cells[y, x];
-		if (y > 0 && cells[y - 1, x] == fieldItem)
+		FieldItem fieldItem = m_cells[y, x];
+		if (y > 0 && m_cells[y - 1, x] == fieldItem)
 		{
 			++lineLength;
 			startPos.y = y - 1;
-			if (y > 1 && cells[y - 2, x] == fieldItem)
+			if (y > 1 && m_cells[y - 2, x] == fieldItem)
 			{
 				++lineLength;
 				startPos.y = y - 2;
 			}
 		}
-		if (y < 2 && cells[y + 1, x] == fieldItem)
+		if (y < 2 && m_cells[y + 1, x] == fieldItem)
 		{
 			++lineLength;
 			endPos.y = y + 1;
-			if (y < 1 && cells[y + 2, x] == fieldItem)
+			if (y < 1 && m_cells[y + 2, x] == fieldItem)
 			{
 				++lineLength;
 				endPos.y = y + 2;
@@ -189,25 +240,25 @@ public class Field : MonoBehaviour
 		return lineLength >= Constant.LINE_LENGTH_TO_WIN;
 	}
 
-	private bool TryToWinCheckHorizontal(uint x, uint y, ref Vector3 startPos, ref Vector3 endPos)
+	private static bool TryToWinCheckHorizontal(uint x, uint y, ref Vector3 startPos, ref Vector3 endPos)
 	{
 		uint lineLength = 1;
-		FieldItem fieldItem = cells[y, x];
-		if (x > 0 && cells[y, x - 1] == fieldItem)
+		FieldItem fieldItem = m_cells[y, x];
+		if (x > 0 && m_cells[y, x - 1] == fieldItem)
 		{
 			++lineLength;
 			startPos.x = x - 1;
-			if (x > 1 && cells[y, x - 2] == fieldItem)
+			if (x > 1 && m_cells[y, x - 2] == fieldItem)
 			{
 				++lineLength;
 				startPos.x = x - 2;
 			}
 		}
-		if (x < 2 && cells[y, x + 1] == fieldItem)
+		if (x < 2 && m_cells[y, x + 1] == fieldItem)
 		{
 			++lineLength;
 			endPos.x = x + 1;
-			if (x < 1 && cells[y, x + 2] == fieldItem)
+			if (x < 1 && m_cells[y, x + 2] == fieldItem)
 			{
 				++lineLength;
 				endPos.x = x + 2;
@@ -216,28 +267,28 @@ public class Field : MonoBehaviour
 		return lineLength >= Constant.LINE_LENGTH_TO_WIN;
 	}
 
-	private bool TryToWinCheckLeftDiagonal(uint x, uint y, ref Vector3 startPos, ref Vector3 endPos)
+	private static bool TryToWinCheckLeftDiagonal(uint x, uint y, ref Vector3 startPos, ref Vector3 endPos)
 	{
 		uint lineLength = 1;
-		FieldItem fieldItem = cells[y, x];
-		if (x > 0 && y > 0 && cells[y - 1, x - 1] == fieldItem)
+		FieldItem fieldItem = m_cells[y, x];
+		if (x > 0 && y > 0 && m_cells[y - 1, x - 1] == fieldItem)
 		{
 			++lineLength;
 			startPos.x = x - 1;
 			startPos.y = y - 1;
-			if (x > 1 && y > 1 && cells[y - 2, x - 2] == fieldItem)
+			if (x > 1 && y > 1 && m_cells[y - 2, x - 2] == fieldItem)
 			{
 				++lineLength;
 				startPos.x = x - 2;
 				startPos.y = y - 2;
 			}
 		}
-		if (x < 2 && y < 2 && cells[y + 1, x + 1] == fieldItem)
+		if (x < 2 && y < 2 && m_cells[y + 1, x + 1] == fieldItem)
 		{
 			++lineLength;
 			endPos.x = x + 1;
 			endPos.y = y + 1;
-			if (x < 1 && y < 1 && cells[y + 2, x + 2] == fieldItem)
+			if (x < 1 && y < 1 && m_cells[y + 2, x + 2] == fieldItem)
 			{
 				++lineLength;
 				endPos.x = x + 2;
@@ -247,28 +298,28 @@ public class Field : MonoBehaviour
 		return lineLength >= Constant.LINE_LENGTH_TO_WIN;
 	}
 
-	private bool TryToWinCheckRightDiagonal(uint x, uint y, ref Vector3 startPos, ref Vector3 endPos)
+	private static bool TryToWinCheckRightDiagonal(uint x, uint y, ref Vector3 startPos, ref Vector3 endPos)
 	{
 		uint lineLength = 1;
-		FieldItem fieldItem = cells[y, x];
-		if (x < 2 && y > 0 && cells[y - 1, x + 1] == fieldItem)
+		FieldItem fieldItem = m_cells[y, x];
+		if (x < 2 && y > 0 && m_cells[y - 1, x + 1] == fieldItem)
 		{
 			++lineLength;
 			endPos.x = x + 1;
 			endPos.y = y - 1;
-			if (x < 1 && y > 1 && cells[y - 2, x + 2] == fieldItem)
+			if (x < 1 && y > 1 && m_cells[y - 2, x + 2] == fieldItem)
 			{
 				++lineLength;
 				endPos.x = x + 2;
 				endPos.y = y - 2;
 			}
 		}
-		if (x > 0 && y < 2 && cells[y + 1, x - 1] == fieldItem)
+		if (x > 0 && y < 2 && m_cells[y + 1, x - 1] == fieldItem)
 		{
 			++lineLength;
 			endPos.x = x - 1;
 			endPos.y = y + 1;
-			if (x > 1 && y < 1 && cells[y + 2, x - 2] == fieldItem)
+			if (x > 1 && y < 1 && m_cells[y + 2, x - 2] == fieldItem)
 			{
 				++lineLength;
 				endPos.x = x - 2;
@@ -282,18 +333,57 @@ public class Field : MonoBehaviour
 	{
 		if (fieldItem == FieldItem.Cross)
 		{
-			lineImage.color = new Color(0.33f, 0.33f, 0.33f, 1);
+			m_lineImage.color = new Color(0.33f, 0.33f, 0.33f, 1);
 		}
 		else if (fieldItem == FieldItem.Round)
 		{
-			lineImage.color = new Color(0.95f, 0.92f, 0.827f, 1);
+			m_lineImage.color = new Color(0.95f, 0.92f, 0.827f, 1);
 		}
 		else
 		{
-			lineImage.color = new Color(0, 0, 0, 0);
+			m_lineImage.color = new Color(0, 0, 0, 0);
 		}
-		lineRectTransform.offsetMin = new Vector2(left, bottom);
-		lineRectTransform.offsetMax = new Vector2(-right, -top);
-		lineRectTransform.rotation = Quaternion.Euler(0, 0, zRotation);
+		m_lineRectTransform.offsetMin = new Vector2(left, bottom);
+		m_lineRectTransform.offsetMax = new Vector2(-right, -top);
+		m_lineRectTransform.rotation = Quaternion.Euler(0, 0, zRotation);
+	}
+
+	public static bool IsCellFree(int x, int y)
+	{
+		return m_cells[y, x] == FieldItem.Empty;
+	}
+
+	public static bool IsFieldFull()
+	{
+		foreach (FieldItem cell in m_cells)
+		{
+			if (cell == FieldItem.Empty)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public static FieldItem[,] GetFieldItems()
+	{
+		return m_cells;
+	}
+
+	public void UndoOnce()
+	{
+		if (m_lastTurn.x != -1 && m_lastTurn.y != -1)
+		{
+			m_cells[(uint)m_lastTurn.y, (uint)m_lastTurn.x] = FieldItem.Empty;
+			m_cellsImage[(uint)m_lastTurn.y, (uint)m_lastTurn.x].color = new Color(1, 1, 1, 0);
+			m_lastTurn = new Vector2(-1, -1);
+			GameController.NextTurn();
+		}
+	}
+
+	public static void MarkCell(uint x, uint y)
+	{
+		ClearMarks();
+		m_cellsBackground[y, x].color = new Color(0.77f, 0.59f, 0.59f, 0.51f);
 	}
 }
